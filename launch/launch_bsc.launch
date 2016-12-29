@@ -1,0 +1,12 @@
+<launch>
+  
+  <!-- Start up gazebo, amcl and RVIZ -->
+  <include file="$(find turtlebot_gazebo)/launch/turtlebot_world.launch" />
+  <include file="$(find turtlebot_gazebo)/launch/amcl_demo.launch" />
+  
+  <!-- Start up BSC and data collection nodes -->
+  <node pkg="bsc_turtle" type="bsc_main.py" name="bscMain" />
+  <node pkg="bsc_turtle" type="expVars.py" name="bscData" />
+
+</launch>
+ 
