@@ -49,12 +49,20 @@ class BSCFun:
 
         # ROS Publishers
         self.pub = rospy.Publisher('/cmd_vel_mux/input/bsc', Twist, queue_size=100)
+        
+        # File data writer
+        file = open('alphaData.csv', 'wb')
+        self.wr = csv.writer(file, quoting=csv.QUOTE_ALL, delimiter='\n')
 
         # DEEEEMONS :O
         daemon = threading.Thread(name='bscDaemon', target=self.bscDaemon)
         daemon.setDaemon(True)
         daemon.start()
-
+        
+        dataDaemon = threading.Thread(name='dataDaemon', target=self.dataDaemon)
+        dataDaemon.setDaemon(True)
+        dataDaemon.start()
+        
         # ROS Subscribers
         rospy.Subscriber('/odom', Odometry, self.odomCallback)
         rospy.Subscriber('/move_base/current_goal', PoseStamped, self.goalCallback)
@@ -62,6 +70,12 @@ class BSCFun:
         rospy.Subscriber('/cmd_vel_mux/input/teleop', Twist, self.userCmdCallback)
         rospy.loginfo("BSC Ready")
         rospy.spin()
+        
+    def dataDaemon(self):
+        r = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            self.wr.writerow(self.bscParamZ)
+            r.sleep()
 
     def bscDaemon(self):
         # BSC Daemon conducts necessary blending while ROS spins
@@ -81,10 +95,10 @@ class BSCFun:
             dMax1 = 8    # Max distance blending occurs at
             optMax1 = 3  # Max difference in cmds allowed
             # Math stuff, see paper on BSC parameter
-            bscParamZ = max(0, (1 - (self.distToGoal / dMax1))) * \
-                        max(0, (1 - math.pow((deltaOpZ / optMax1), 2)))
+            self.bscParamZ = max(0, (1 - (self.distToGoal / dMax1))) * \
+                             max(0, (1 - math.pow((deltaOpZ / optMax1), 2)))
             # NC rospy.loginfo("BscParam: %f", bscParamZ)
-            vMsg.angular.z = self.wzVelUser - (bscParamZ * deltaOpZ)
+            vMsg.angular.z = self.wzVelUser - (self.bscParamZ * deltaOpZ)
             vMsg.linear.x = self.xVelUser
             # NC rospy.loginfo("Z: %f, X: %f", vMsg.angular.z, vMsg.linear.x)
             # Publish blended velocity cmd
