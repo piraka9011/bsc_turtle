@@ -3,8 +3,10 @@
 # Python Lib
 from __future__ import division
 from functools import partial
+import csv
 import math
 import threading
+import Queue
 
 # ROS Lib
 import rospy
@@ -40,15 +42,17 @@ class BSCFun:
         self.xVelUser = 0.0;    self.wzVelUser = 1.0    # User cmd_vel
         self.xVel = 0.0;        self.wzVel = 0.0        # Navi cmd_vel
         self.distToGoal = 0.0   # Dist. to goal as hypotenuse of x/y positions
-        alpha = 1       # Alpha variable, don't mess with it...
-        self.userDelay = False;  self.delay = 1 * alpha  # Delay variables
+        self.alpha = int(1)  # Alpha variable, don't mess with it...
+        self.userDelay = False;  self.delay = rospy.Time(1).to_sec() * self.alpha  # Delay variables
+        self.queueX = Queue.Queue();    self.queueZ = Queue.Queue()
 
         self.userDelay = str2bool(raw_input("User Delay? (y/n)"))
         if self.userDelay:
-            alpha = raw_input("Alpha Delay (Default: 1):")
+            self.alpha = int(raw_input("Alpha Delay (Default: 1):"))
 
         # ROS Publishers
         self.pub = rospy.Publisher('/cmd_vel_mux/input/bsc', Twist, queue_size=100)
+        self.delayPub = rospy.Publisher('/bsc/delay', Twist, queue_size=100)
         
         # File data writer
         file = open('alphaData.csv', 'wb')
@@ -58,7 +62,7 @@ class BSCFun:
         daemon = threading.Thread(name='bscDaemon', target=self.bscDaemon)
         daemon.setDaemon(True)
         daemon.start()
-        
+
         dataDaemon = threading.Thread(name='dataDaemon', target=self.dataDaemon)
         dataDaemon.setDaemon(True)
         dataDaemon.start()
@@ -68,13 +72,14 @@ class BSCFun:
         rospy.Subscriber('/move_base/current_goal', PoseStamped, self.goalCallback)
         rospy.Subscriber('/cmd_vel_mux/input/navi', Twist, self.optCmdCallback)
         rospy.Subscriber('/cmd_vel_mux/input/teleop', Twist, self.userCmdCallback)
+        rospy.Subscriber('/bsc/delay', Twist, self.userCmdCallback)
         rospy.loginfo("BSC Ready")
         rospy.spin()
         
     def dataDaemon(self):
         r = rospy.Rate(10)
         while not rospy.is_shutdown():
-            self.wr.writerow(self.bscParamZ)
+            self.wr.writerow([self.bscParamZ])
             r.sleep()
 
     def bscDaemon(self):
@@ -92,7 +97,7 @@ class BSCFun:
             deltaOpZ = self.wzVelUser - self.wzVel
 
             # BSC
-            dMax1 = 8    # Max distance blending occurs at
+            dMax1 = 15    # Max distance blending occurs at
             optMax1 = 3  # Max difference in cmds allowed
             # Math stuff, see paper on BSC parameter
             self.bscParamZ = max(0, (1 - (self.distToGoal / dMax1))) * \
@@ -127,7 +132,8 @@ class BSCFun:
             # Use ROS timer to call the delayed callback
             # Delayed call back changes the user cmds only once called
             rospy.Timer(rospy.Duration(self.delay),
-                        partial(self.delayedUserCmdCB, msg))
+                        partial(self.delayedUserCmdCB, msg),
+                        oneshot=True)
         elif not self.userDelay:
             # Get x and y velocity and determine the heading for the user
             self.xVelUser = msg.linear.x

@@ -13,10 +13,10 @@ def sendStart():
     '''
     # RVIZ: X: 0.5, Y: -0.06 W: 1
     # Office: X: -0.3 Y: 0.15 W:1/Z:0
-    goal.target_pose.pose.position.x = 0
-    goal.target_pose.pose.position.y = 0
-    goal.target_pose.pose.orientation.z = 0.7
-    goal.target_pose.pose.orientation.w = 0.7
+    goal.target_pose.pose.position.x = -1.3222
+    goal.target_pose.pose.position.y = 2.8687
+    goal.target_pose.pose.orientation.z = -0.0116
+    goal.target_pose.pose.orientation.w = 0.9999
     goal.target_pose.header.stamp = rospy.Time.now()
     goal.target_pose.header.frame_id = 'map'
 
@@ -36,10 +36,10 @@ def sendStart():
     # Goal position
     # RVIZ: X: 0.6 Y: -4.45 W: 1
     # Office: X: 1.5 Y: -3 W:1/Z:0
-    goal.target_pose.pose.position.x = 3.45628553533
-    goal.target_pose.pose.position.y = -1.45433644569
-    goal.target_pose.pose.orientation.z = -0.674237942631
-    goal.target_pose.pose.orientation.w = 0.738514181798
+    goal.target_pose.pose.position.x = -0.575
+    goal.target_pose.pose.position.y = 11.6096
+    goal.target_pose.pose.orientation.z = 0.792
+    goal.target_pose.pose.orientation.w = 0.610
     goal.target_pose.header.stamp = rospy.Time.now()
     goal.target_pose.header.frame_id = 'map'
 

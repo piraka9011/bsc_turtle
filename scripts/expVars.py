@@ -43,6 +43,7 @@ class ExpVariables:
         rospy.set_param('/move_base/oscillation_timeout', 0.0)
         rospy.set_param('/move_base/DWAPlannerROS/xy_goal_tolerance', 0.5)
         rospy.set_param('/move_base/DWAPlannerROS/yaw_goal_tolerance', 0.9)
+        rospy.set_param('/move_base/planner_patience', 15.0)
 
         # Capture Ctrl-C
         signal.signal(signal.SIGINT, self.sigintHandler)
@@ -73,7 +74,7 @@ class ExpVariables:
         print("Running BSC")
         runBSC = Process(target=os.system, args=["rosrun bsc_turtle bsc_main.py"])
         runBSC.start()
-        time.sleep(7)
+        time.sleep(1)
         '''
         # Begin
         raw_input("Press enter to start experiment...")
