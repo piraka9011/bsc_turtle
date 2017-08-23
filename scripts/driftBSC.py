@@ -12,8 +12,6 @@ import math
 import tf_conversions
 import threading
 
-from expVars import linearDrift, whirlDrift, alphaDriftAng, alphaDriftLin
-
 class driftBSC():
 
     def __init__(self):
@@ -23,7 +21,7 @@ class driftBSC():
         self.userVelX = 0.0;    self.userVelZ = 0.0
         self.yaw = 0
         self.noiseMsg = Twist()  # Create twist/velocity object
-        self.linearDrift = True;           self.whirlDrift = whirlDrift   # Set what kind of drift we want
+        self.linearDrift = True;           self.whirlDrift = False   # Set what kind of drift we want
         self.alphaLin = 1;                 self.alphaAng = 1              # Used to determine strength of drift
         self.tbotAng = 0.5;                self.tbotLin = 0.1             # Default Tbot velocity cmds
         self.threshDist = 0.75   # Used for radius of whirlpool drift
@@ -79,7 +77,7 @@ class driftBSC():
                 elif 0.000001 <= self.yaw <= math.pi:
                     self.noiseMsg.angular.z = self.userVelZ + (self.alphaLin * self.tbotAng)
 
-                rospy.loginfo("User: %f, Noise: %f", self.userVelZ, self.noiseMsg.angular.z)
+                # rospy.loginfo("User: %f, Noise: %f", self.userVelZ, self.noiseMsg.angular.z)
                 # Publish drift
                 self.noiseMsg.linear.x = self.userVelX
                 self.velPub.publish(self.noiseMsg)

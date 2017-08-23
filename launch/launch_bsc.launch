@@ -1,11 +1,20 @@
 <launch>
   
-  <!-- Start up gazebo, amcl and RVIZ -->
-  <include file="$(find turtlebot_gazebo)/launch/turtlebot_world.launch" />
-  <include file="$(find turtlebot_gazebo)/launch/amcl_demo.launch" />
+  <!-- Start up amcl, teleop, and RVIZ -->
+  <include file="$(find turtlebot_navigation)/launch/amcl_demo.launch" />
+  <include file="$(find turtlebot_teleop)/launch/keyboard_teleop.launch" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bsc_turtle)/rviz/tbot_config.rviz"/>
   
   <!-- Start up BSC and data collection nodes -->
-  <node pkg="bsc_turtle" type="bsc_main.py" name="bscMain" />
+  <node pkg="bsc_turtle" type="bsc_main.py" name="bscMain" >
+    <param name="/bsc/max_dist" type="double" value="15.0"/>
+    <param name="/bsc/max_cmd" type="double" value="3.0"/>
+    <param name="/bsc/delay" type="double" value="1.0"/>
+    <param name="/bsc/start_x" type="double" value="-1.0"/>
+    <param name="/bsc/start_y" type="double" value="-1.0"/>
+    <param name="/bsc/stary_z" type="double" value="0.8"/>
+    <param name="/bsc/start_w" type="double" value="0.5"/>
+  </node>
   <node pkg="bsc_turtle" type="expVars.py" name="bscData" />
 
 </launch>

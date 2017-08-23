@@ -12,15 +12,8 @@ import rospy
 from move_base_msgs.msg import *
 from nav_msgs.msg import Odometry
 
-# Global variables: These variables are passed to other scripts as configs
-userDelay = False       # bsc_main.py
-linearDrift = False     # driftBSC.py
-whirlDrift = False      # driftBSC.py
-alphaDelay = 1          # bsc_main.py
-alphaDriftLin = 0.5     # driftBSC.py
-alphaDriftAng = 1       # driftBSC.py
 
-# ----------------------------------Data Collection----------------------------------
+# ----------------------------------data Collection----------------------------------
 
 class ExpVariables:
 
@@ -51,11 +44,14 @@ class ExpVariables:
         # ROS Subscribers
         rospy.Subscriber('/odom', Odometry, self.getDistance)
         rospy.Subscriber('/move_base/result', MoveBaseActionResult, self.resultCallback)
+
+
         # --------------------------------------------------------------------------------
         # ------------------------------------User Info-----------------------------------
         # Get User Name
         self.subjName = raw_input("Enter Subject Name: ")
-        csvName = self.subjName + '.csv'
+        self.testType = raw_input("Enter test type:")
+        csvName = self.subjName + "_" + self.testType + '.csv'
 
         # CSV File
         self.csvFile = open(csvName, 'w')
@@ -69,13 +65,7 @@ class ExpVariables:
             sendStart = Process(target=os.system, args=["rosrun bsc_turtle sendStart.py"])
             sendStart.start()
             time.sleep(1)
-        '''
-        # Run BSC Node
-        print("Running BSC")
-        runBSC = Process(target=os.system, args=["rosrun bsc_turtle bsc_main.py"])
-        runBSC.start()
-        time.sleep(1)
-        '''
+
         # Begin
         raw_input("Press enter to start experiment...")
 
@@ -122,6 +112,7 @@ class ExpVariables:
             rospy.loginfo("Distance traveled: %f", self.pathLength)
             self.csvFile.close()
             # Kill all threads, sys.exit() not enough
+            rospy.signal_shutdown("End of experiment")
             os._exit(0)
 
     # Handler for ctrl-c, does same as reaching goal
@@ -136,6 +127,7 @@ class ExpVariables:
                                  "%i.%i " % (self.totalTime.secs, self.totalTime.nsecs),
                                  ("%f " % self.pathLength)))
         self.csvFile.close()
+        rospy.signal_shutdown("User ended experiment")
         os._exit(0)
 
     # Gets navigation result to determine if goal reached
@@ -145,36 +137,3 @@ class ExpVariables:
 # ----------------------------Main Function------------------------------------
 if __name__ == "__main__":
     ExpVariables()
-    '''
-    # Run Drifting node
-    if linearDrift or whirlDrift:
-        # call(['terminator', '-e', 'rosrun bsc_turtle driftBSC.py'])
-        # Popen('rosrun bsc_turtle driftBSC.py', shell=True, stdout=PIPE, stderr=STDOUT)
-        runDrift = Process(target=os.system, args=["rosrun bsc_turtle driftBSC.py"])
-        runDrift.start()
-        time.sleep(1)
-
-    # Keep default configs?
-    acceptDefault = str2bool(raw_input("Accept Default configs? (y/n)"))
-
-    # Mess around with configs
-    if not acceptDefault:
-        # User Input time delay
-        userDelay = str2bool(raw_input("User Delay? (y/n)"))
-        if userDelay:
-            alphaDelay = raw_input("Alpha Delay (default 1): ")
-
-        # Drift velocity commands
-        # Check if linear drift wanted
-        linearDrift = str2bool(raw_input("Linear Drift? (y/n)"))
-        if linearDrift:
-            # Set drifting strength
-            alphaDriftLin = raw_input("Alpha Drift (default 1): ")
-        # Or whirlpools
-        elif not linearDrift:
-            whirlDrift = str2bool(raw_input("Whirlpool Drift? (y/n)"))
-            if whirlDrift:
-                # Set drifting strength
-                alphaDriftAng = raw_input("Alpha Drift (default 1): ")
-    '''
-

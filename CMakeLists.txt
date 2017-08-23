@@ -7,6 +7,7 @@ project(bsc_turtle)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
+  message_filters
   roscpp
   rospy
 )
@@ -129,7 +130,7 @@ include_directories(
 # add_dependencies(bsc_turtle ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(bsc_turtle_node src/bsc_turtle_node.cpp)
+#add_executable(delay src/delay.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

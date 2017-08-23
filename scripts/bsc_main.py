@@ -6,6 +6,7 @@ from functools import partial
 import csv
 import math
 import threading
+import time
 import Queue
 
 # ROS Lib
@@ -41,14 +42,14 @@ class BSCFun:
         self.currentX = 0.0;    self.currentY = 0.0     # Turtlebot position
         self.xVelUser = 0.0;    self.wzVelUser = 1.0    # User cmd_vel
         self.xVel = 0.0;        self.wzVel = 0.0        # Navi cmd_vel
+        self.bscParamZ = 1.0
         self.distToGoal = 0.0   # Dist. to goal as hypotenuse of x/y positions
-        self.alpha = int(1)  # Alpha variable, don't mess with it...
-        self.userDelay = False;  self.delay = rospy.Time(1).to_sec() * self.alpha  # Delay variables
+        self.userDelay = False  # Delay variables
         self.queueX = Queue.Queue();    self.queueZ = Queue.Queue()
 
         self.userDelay = str2bool(raw_input("User Delay? (y/n)"))
         if self.userDelay:
-            self.alpha = int(raw_input("Alpha Delay (Default: 1):"))
+            self.delay = rospy.get_param('/bsc/delay', 1)
 
         # ROS Publishers
         self.pub = rospy.Publisher('/cmd_vel_mux/input/bsc', Twist, queue_size=100)
@@ -57,6 +58,8 @@ class BSCFun:
         # File data writer
         file = open('alphaData.csv', 'wb')
         self.wr = csv.writer(file, quoting=csv.QUOTE_ALL, delimiter='\n')
+
+        self.now = time.time()
 
         # DEEEEMONS :O
         daemon = threading.Thread(name='bscDaemon', target=self.bscDaemon)
@@ -79,7 +82,7 @@ class BSCFun:
     def dataDaemon(self):
         r = rospy.Rate(10)
         while not rospy.is_shutdown():
-            self.wr.writerow([self.bscParamZ])
+            self.wr.writerow((time.time() - self.now, self.bscParamZ))
             r.sleep()
 
     def bscDaemon(self):
@@ -97,8 +100,8 @@ class BSCFun:
             deltaOpZ = self.wzVelUser - self.wzVel
 
             # BSC
-            dMax1 = 15    # Max distance blending occurs at
-            optMax1 = 3  # Max difference in cmds allowed
+            dMax1 = rospy.get_param('/bsc/max_dist', 15)    # Max distance blending occurs at
+            optMax1 = rospy.get_param('/bsc/max_cmd', 3)  # Max difference in cmds allowed
             # Math stuff, see paper on BSC parameter
             self.bscParamZ = max(0, (1 - (self.distToGoal / dMax1))) * \
                              max(0, (1 - math.pow((deltaOpZ / optMax1), 2)))
@@ -144,4 +147,8 @@ class BSCFun:
         self.xVel = msg.linear.x
         self.wzVel = msg.angular.z
 
-BSCFun()
+if __name__ == '__main__':
+    try:
+        BSCFun()
+    except rospy.ROSInterruptException():
+        rospy.signal_shutdown("User Ended Experiment")
