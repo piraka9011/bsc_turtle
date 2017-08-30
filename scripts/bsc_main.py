@@ -34,7 +34,7 @@ class BSCFun:
     def __init__(self):
 
         # Init Node
-        rospy.init_node('bscMain', anonymous=True)
+        rospy.init_node('bsc_main', anonymous=True)
 
         # Init variables
         self.optHeading = 0.0;  self.newHeading = 0.0   # Headings
@@ -49,14 +49,17 @@ class BSCFun:
 
         self.userDelay = str2bool(raw_input("User Delay? (y/n)"))
         if self.userDelay:
-            self.delay = rospy.get_param('/bsc/delay', 1)
+            self.delay = rospy.get_param('/bsc/delay', 0.5)
 
         # ROS Publishers
         self.pub = rospy.Publisher('/cmd_vel_mux/input/bsc', Twist, queue_size=100)
         self.delayPub = rospy.Publisher('/bsc/delay', Twist, queue_size=100)
         
         # File data writer
-        file = open('alphaData.csv', 'wb')
+        name = rospy.get_param('/bsc/user_name', 'Anas')
+        test_type = rospy.get_param('/bsc/test_type', 'baselineBSC')
+        file_name = 'alphaData-' + name + '-' + test_type + '.csv'
+        file = open(file_name, 'wb')
         self.wr = csv.writer(file, quoting=csv.QUOTE_ALL, delimiter='\n')
 
         self.now = time.time()

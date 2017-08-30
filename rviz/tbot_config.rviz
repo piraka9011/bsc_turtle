@@ -338,6 +338,7 @@ Visualization Manager:
             X: 0
             Y: 0
             Z: 0
+          Pose Color: 255; 85; 255
           Pose Style: None
           Radius: 0.03
           Shaft Diameter: 0.1
@@ -373,6 +374,7 @@ Visualization Manager:
             X: 0
             Y: 0
             Z: 0
+          Pose Color: 255; 85; 255
           Pose Style: None
           Radius: 0.03
           Shaft Diameter: 0.1
@@ -465,6 +467,7 @@ Visualization Manager:
         X: 0
         Y: 0
         Z: 0
+      Pose Color: 255; 85; 255
       Pose Style: None
       Radius: 0.03
       Shaft Diameter: 0.1
@@ -479,7 +482,7 @@ Visualization Manager:
       Name: Camera
       Overlay Alpha: 0.5
       Queue Size: 2
-      Transport Hint: theora
+      Transport Hint: compressed
       Unreliable: false
       Value: true
       Visibility:

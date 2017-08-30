@@ -21,7 +21,7 @@ class ExpVariables:
 
         # -----------------------------------HouseKeeping---------------------------------
         # Init Node
-        rospy.init_node('bscData', anonymous=True)
+        rospy.init_node('bsc_data', anonymous=True)
 
         # Init Variables
         self.timeStart = rospy.Time();      self.timeEnd = rospy.Time()
@@ -45,12 +45,11 @@ class ExpVariables:
         rospy.Subscriber('/odom', Odometry, self.getDistance)
         rospy.Subscriber('/move_base/result', MoveBaseActionResult, self.resultCallback)
 
-
         # --------------------------------------------------------------------------------
         # ------------------------------------User Info-----------------------------------
         # Get User Name
-        self.subjName = raw_input("Enter Subject Name: ")
-        self.testType = raw_input("Enter test type:")
+        self.subjName = rospy.get_param('/bsc/user_name', 'Anas')
+        self.testType = rospy.get_param('/bsc/test_type', 'Drift_0.1')
         csvName = self.subjName + "_" + self.testType + '.csv'
 
         # CSV File
@@ -60,8 +59,8 @@ class ExpVariables:
         # --------------------------------------------------------------------------------
         # ------------------------------------Processes-----------------------------------
         # Send the goal position
-        startSend = raw_input("Send goal position? (y/n)")
-        if startSend == "y":
+        startSend = rospy.get_param('/bsc/goal_pos', True)
+        if startSend:
             sendStart = Process(target=os.system, args=["rosrun bsc_turtle sendStart.py"])
             sendStart.start()
             time.sleep(1)
@@ -71,9 +70,10 @@ class ExpVariables:
 
         # ROSBag record for position traveled
         print("Recording to bag...")
+        name = self.subjName + "_" + self.testType
         runROSBag = Process(target=os.system,
                             args=["rosbag record -O %s.bag "
-                                  "/tf /move_base/DWAPlannerROS/global_plan" % self.subjName])
+                                  "/tf /move_base/DWAPlannerROS/global_plan" % name])
         runROSBag.start()
         time.sleep(1)
         # --------------------------------------------------------------------------------

@@ -15,6 +15,9 @@ import threading
 class driftBSC():
 
     def __init__(self):
+        # Create node
+        rospy.init_node('drift_bsc', anonymous=True)
+
         # Init vars
         self.posX = 0.0;        self.posY = 0.0
         self.posZ = 0.0;        self.posW = 1.0
@@ -22,18 +25,14 @@ class driftBSC():
         self.yaw = 0
         self.noiseMsg = Twist()  # Create twist/velocity object
         self.linearDrift = True;           self.whirlDrift = False   # Set what kind of drift we want
-        self.alphaLin = 1;                 self.alphaAng = 1              # Used to determine strength of drift
-        self.tbotAng = 0.5;                self.tbotLin = 0.1             # Default Tbot velocity cmds
+        self.tbotAng = 0.5
+        self.tbotLin = rospy.get_param('/bsc/drift_value', 0.1)            # Default Tbot velocity cmds
         self.threshDist = 0.75   # Used for radius of whirlpool drift
-
 
         # Whirlpool grid
         gridX = np.linspace(-5.5, 2.5, 5)
         gridY = [-5, -2, 0, 2]
         self.coords = list(product(gridX, gridY))
-
-        # Create node
-        rospy.init_node('noiseBSC', anonymous=True)
 
         # Publishers
         self.velPub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=100)
@@ -73,9 +72,9 @@ class driftBSC():
             if self.linearDrift:
                 # Check if we need to drift
                 if -math.pi <= self.yaw <= -0.000001:
-                    self.noiseMsg.angular.z = self.userVelZ - (self.alphaLin * self.tbotAng)
+                    self.noiseMsg.angular.z = self.userVelZ - (self.tbotAng)
                 elif 0.000001 <= self.yaw <= math.pi:
-                    self.noiseMsg.angular.z = self.userVelZ + (self.alphaLin * self.tbotAng)
+                    self.noiseMsg.angular.z = self.userVelZ + (self.tbotAng)
 
                 # rospy.loginfo("User: %f, Noise: %f", self.userVelZ, self.noiseMsg.angular.z)
                 # Publish drift
@@ -87,8 +86,8 @@ class driftBSC():
                     currentDist = math.hypot(x - self.posX, y - self.posY)  # Get distance from whirlpool coords
                     # rospy.loginfo("Current Dist: %f", currentDist)
                     if currentDist <= self.threshDist:  # Check if inside whirlpool radius
-                        self.noiseMsg.angular.z = self.userVelZ + (self.alphaAng * self.tbotAng)
-                        self.noiseMsg.linear.x = self.userVelX + (self.alphaAng * self.tbotLin)
+                        self.noiseMsg.angular.z = self.userVelZ + (self.tbotAng)
+                        self.noiseMsg.linear.x = self.userVelX + (self.tbotLin)
                         self.velPub.publish(self.noiseMsg)  # SPPPPPPPPPPIIIIIIIIIINNNNNNNIIIIINNNNNGGGGGGG
 
 if __name__ == '__main__':

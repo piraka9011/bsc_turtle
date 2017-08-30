@@ -36,10 +36,10 @@ def sendStart():
     # Goal position
     # RVIZ: X: 0.6 Y: -4.45 W: 1
     # Office: X: 1.5 Y: -3 W:1/Z:0s
-    goal.target_pose.pose.position.x = rospy.get_param('/bsc/start_x',-1)
-    goal.target_pose.pose.position.y = rospy.get_param('/bsc/start_y', -1)
-    goal.target_pose.pose.orientation.z = rospy.get_param('/bsc/start_z', 0.82)
-    goal.target_pose.pose.orientation.w = rospy.get_param('/bsc/start_w', 0.5)
+    goal.target_pose.pose.position.x = rospy.get_param('/bsc/start_x',11.5)
+    goal.target_pose.pose.position.y = rospy.get_param('/bsc/start_y', 0.64)
+    goal.target_pose.pose.orientation.z = rospy.get_param('/bsc/start_z', 0.01)
+    goal.target_pose.pose.orientation.w = rospy.get_param('/bsc/start_w', 0.99)
     goal.target_pose.header.stamp = rospy.Time.now()
     goal.target_pose.header.frame_id = 'map'
 

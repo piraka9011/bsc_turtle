@@ -1,0 +1,4 @@
+<launch>
+    <!-- Launch this on PC ONLY -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bsc_turtle)/rviz/tbot_config.rviz"/>
+</launch>
