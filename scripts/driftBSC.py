@@ -2,15 +2,18 @@
 
 # ROS Lib
 from geometry_msgs.msg import Twist
-import rospy
 from nav_msgs.msg import Odometry
+import rospy
+import tf_conversions
 
 # Py Lib
 from itertools import product
-import numpy as np
 import math
-import tf_conversions
+import numpy as np
+from os.path import dirname, abspath
 import threading
+from yaml import load
+
 
 class driftBSC():
 
@@ -18,15 +21,22 @@ class driftBSC():
         # Create node
         rospy.init_node('drift_bsc', anonymous=True)
 
+        # Load Params
+        ws_path = dirname(dirname(abspath(__file__)))
+        path = ws_path + '/launch/data_info.yaml'
+        stream = open(path, 'r')
+        self.param = load(stream)
+
         # Init vars
         self.posX = 0.0;        self.posY = 0.0
         self.posZ = 0.0;        self.posW = 1.0
         self.userVelX = 0.0;    self.userVelZ = 0.0
         self.yaw = 0
-        self.noiseMsg = Twist()  # Create twist/velocity object
-        self.linearDrift = True;           self.whirlDrift = False   # Set what kind of drift we want
-        self.tbotAng = 0.5
-        self.tbotLin = rospy.get_param('/bsc/drift_value', 0.1)            # Default Tbot velocity cmds
+        self.noiseMsg = Twist()
+        # Set what kind of drift we want
+        self.linearDrift = True;           self.whirlDrift = False
+        self.tbotAng = self.param['drift_value']
+        self.tbotLin = 0.1         # Default Tbot velocity cmds
         self.threshDist = 0.75   # Used for radius of whirlpool drift
 
         # Whirlpool grid
@@ -72,9 +82,9 @@ class driftBSC():
             if self.linearDrift:
                 # Check if we need to drift
                 if -math.pi <= self.yaw <= -0.000001:
-                    self.noiseMsg.angular.z = self.userVelZ - (self.tbotAng)
+                    self.noiseMsg.angular.z = self.userVelZ - self.tbotAng
                 elif 0.000001 <= self.yaw <= math.pi:
-                    self.noiseMsg.angular.z = self.userVelZ + (self.tbotAng)
+                    self.noiseMsg.angular.z = self.userVelZ + self.tbotAng
 
                 # rospy.loginfo("User: %f, Noise: %f", self.userVelZ, self.noiseMsg.angular.z)
                 # Publish drift

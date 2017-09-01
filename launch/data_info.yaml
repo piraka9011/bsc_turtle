@@ -1,0 +1,8 @@
+user_name: 'Anas'
+test_type: 'Delay_0.5'
+delay: True
+delay_value: 1
+drift_value: 0.3
+send_goal: True
+max_dist: 15
+max_cmd: 3

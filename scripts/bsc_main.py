@@ -5,9 +5,10 @@ from __future__ import division
 from functools import partial
 import csv
 import math
+from yaml import load
 import threading
 import time
-import Queue
+from os.path import dirname, abspath
 
 # ROS Lib
 import rospy
@@ -36,6 +37,12 @@ class BSCFun:
         # Init Node
         rospy.init_node('bsc_main', anonymous=True)
 
+        # Load Params
+        ws_path = dirname(dirname(abspath(__file__)))
+        path = ws_path + '/launch/data_info.yaml'
+        stream = open(path, 'r')
+        self.param = load(stream)
+
         # Init variables
         self.optHeading = 0.0;  self.newHeading = 0.0   # Headings
         self.goalX = 0.0;       self.goalY = 0.0        # Goal position
@@ -44,21 +51,17 @@ class BSCFun:
         self.xVel = 0.0;        self.wzVel = 0.0        # Navi cmd_vel
         self.bscParamZ = 1.0
         self.distToGoal = 0.0   # Dist. to goal as hypotenuse of x/y positions
-        self.userDelay = False  # Delay variables
-        self.queueX = Queue.Queue();    self.queueZ = Queue.Queue()
-
-        self.userDelay = str2bool(raw_input("User Delay? (y/n)"))
-        if self.userDelay:
-            self.delay = rospy.get_param('/bsc/delay', 0.5)
+        # Delay variables
+        self.delay = self.param['delay_value']
+        self.userDelay = self.param['delay']
 
         # ROS Publishers
         self.pub = rospy.Publisher('/cmd_vel_mux/input/bsc', Twist, queue_size=100)
         self.delayPub = rospy.Publisher('/bsc/delay', Twist, queue_size=100)
         
         # File data writer
-        name = rospy.get_param('/bsc/user_name', 'Anas')
-        test_type = rospy.get_param('/bsc/test_type', 'baselineBSC')
-        file_name = 'alphaData-' + name + '-' + test_type + '.csv'
+        file_name = 'alphaData-' + self.param['user_name'] +\
+                    '-' + self.param['test_type'] + '.csv'
         file = open(file_name, 'wb')
         self.wr = csv.writer(file, quoting=csv.QUOTE_ALL, delimiter='\n')
 
@@ -72,7 +75,7 @@ class BSCFun:
         dataDaemon = threading.Thread(name='dataDaemon', target=self.dataDaemon)
         dataDaemon.setDaemon(True)
         dataDaemon.start()
-        
+
         # ROS Subscribers
         rospy.Subscriber('/odom', Odometry, self.odomCallback)
         rospy.Subscriber('/move_base/current_goal', PoseStamped, self.goalCallback)
@@ -103,8 +106,10 @@ class BSCFun:
             deltaOpZ = self.wzVelUser - self.wzVel
 
             # BSC
-            dMax1 = rospy.get_param('/bsc/max_dist', 15)    # Max distance blending occurs at
-            optMax1 = rospy.get_param('/bsc/max_cmd', 3)  # Max difference in cmds allowed
+            # Max distance blending occurs at
+            dMax1 = self.param['max_dist']
+            # Max difference in cmds allowed
+            optMax1 = self.param['max_cmd']
             # Math stuff, see paper on BSC parameter
             self.bscParamZ = max(0, (1 - (self.distToGoal / dMax1))) * \
                              max(0, (1 - math.pow((deltaOpZ / optMax1), 2)))

@@ -3,10 +3,11 @@
 # ROS Lib
 import csv
 import math
+from multiprocessing import Process
 import os
 import signal
 import time
-from multiprocessing import Process
+from yaml import load
 
 import rospy
 from move_base_msgs.msg import *
@@ -22,6 +23,12 @@ class ExpVariables:
         # -----------------------------------HouseKeeping---------------------------------
         # Init Node
         rospy.init_node('bsc_data', anonymous=True)
+
+        # Load Params
+        ws_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = ws_path + '/launch/data_info.yaml'
+        stream = open(path, 'r')
+        self.param = load(stream)
 
         # Init Variables
         self.timeStart = rospy.Time();      self.timeEnd = rospy.Time()
@@ -48,8 +55,8 @@ class ExpVariables:
         # --------------------------------------------------------------------------------
         # ------------------------------------User Info-----------------------------------
         # Get User Name
-        self.subjName = rospy.get_param('/bsc/user_name', 'Anas')
-        self.testType = rospy.get_param('/bsc/test_type', 'Drift_0.1')
+        self.subjName = self.param['user_name']
+        self.testType = self.param['test_type']
         csvName = self.subjName + "_" + self.testType + '.csv'
 
         # CSV File
@@ -59,7 +66,7 @@ class ExpVariables:
         # --------------------------------------------------------------------------------
         # ------------------------------------Processes-----------------------------------
         # Send the goal position
-        startSend = rospy.get_param('/bsc/goal_pos', True)
+        startSend = self.param['send_goal']
         if startSend:
             sendStart = Process(target=os.system, args=["rosrun bsc_turtle sendStart.py"])
             sendStart.start()
